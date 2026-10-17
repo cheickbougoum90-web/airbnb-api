@@ -1,34 +1,34 @@
-# Airbnb NYC API : MongoDB Atlas, Express et ReplicaSet
+# Airbnb NYC API : API RESTful avec Node.js et MongoDB Atlas
 
-API RESTful construite sur le jeu de données **Airbnb New York City 2019** (48 895 logements), avec une étude de la haute disponibilité de MongoDB par **ReplicaSet** (Primary, Secondaries, Oplog, élections, Read/Write Concerns).
+API RESTful complète (CRUD, filtres, pagination, agrégations) construite sur le jeu de données **New York City Airbnb Open Data** (48 895 logements, 2019) et connectée à une base **MongoDB Atlas** hébergée dans le cloud.
 
-Projet réalisé dans le cadre du cours de Bases de Données Avancées (NoSQL et réparties), ESMT Dakar.
+Projet du module Bases de Données NoSQL, INGC2 InDIA 2025 à 2026, ESMT Dakar.
 
-## Contenu du projet
+## Fonctionnalités
 
-| Partie | Description |
-| --- | --- |
-| API REST | Node.js, Express 5 et Mongoose, connectée à MongoDB Atlas |
-| Requêtes d'analyse | 10 requêtes MongoDB (filtres, agrégations, regroupements) dans `scripts/queries.js` |
-| ReplicaSet | Étude et déploiement d'un ReplicaSet de 4 nœuds : Oplog, élections, Read/Write Concerns, failover automatique |
-| Limites et perspectives | Limites du ReplicaSet seul et passage possible au Sharded Cluster (voir `docs/`) |
+- 6 routes REST : liste paginée avec filtres, statistiques agrégées, lecture, création, modification partielle et suppression.
+- Schéma Mongoose avec validations (`required`, `enum`, `min`, `max`) et index de performance (`price`, `neighbourhood_group + price`, `room_type`, `neighbourhood`).
+- 10 requêtes MongoDB d'interrogation, dont 5 pipelines d'agrégation (`$group`, `$match`, `$sort`, `$project`, `$round`, `$divide`).
+- Configuration sécurisée par variables d'environnement (`.env`, non versionné).
+- Tests de tous les endpoints avec Postman (voir le rapport).
 
 ## Technologies
 
-Node.js, Express 5, Mongoose 9, MongoDB Atlas, dotenv, cors.
+Node.js, Express 5, Mongoose 9, MongoDB Atlas (cluster gratuit M0 sur AWS), MongoDB Compass, dotenv, cors, Postman.
 
 ## Structure
 
 ```
 airbnb-api/
-├── server.js               Point d'entrée
-├── config/database.js      Connexion à MongoDB Atlas
-├── models/Listing.js       Schéma d'un logement (index sur price, neighbourhood, room_type)
-├── routes/listings.js      Routes de l'API
+├── server.js               Point d'entrée : Express, middlewares, routes
+├── config/database.js      Connexion à MongoDB Atlas via Mongoose
+├── models/Listing.js       Schéma Mongoose et index
+├── routes/listings.js      Les 6 routes REST
 ├── scripts/
-│   ├── queries.js          10 requêtes MongoDB sur le dataset
+│   ├── queries.js          10 requêtes MongoDB documentées
 │   └── AB_NYC_2019.csv     Jeu de données (48 895 lignes)
-└── docs/                   Rapport du projet
+└── docs/
+    └── Rapport_Projet_NoSQL.docx   Rapport complet du projet
 ```
 
 ## Installation
@@ -40,44 +40,61 @@ npm install
 cp .env.example .env     # puis renseigner MONGODB_URI
 ```
 
-Importez ensuite `scripts/AB_NYC_2019.csv` dans une collection `listings` de votre base (MongoDB Compass ou `mongoimport`).
+1. Créez un cluster gratuit sur [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register), un utilisateur de base de données et autorisez votre adresse IP.
+2. Avec MongoDB Compass, créez la base `airbnbdb` et la collection `listings`, puis importez `scripts/AB_NYC_2019.csv`.
+3. Renseignez votre chaîne de connexion dans `.env`.
 
 ```bash
-node server.js           # API sur http://localhost:3000
-node scripts/queries.js  # exécute les 10 requêtes d'analyse
+npm start                # API sur http://localhost:3000
+npm run queries          # exécute les 10 requêtes d'analyse
 ```
 
-## Routes de l'API
+## Documentation de l'API
+
+URL de base : `http://localhost:3000`. Format : JSON. Authentification : aucune (projet académique).
 
 | Méthode | Route | Description |
 | --- | --- | --- |
 | GET | `/api/listings` | Liste paginée (20 par page). Filtres : `neighbourhood`, `room_type`, `min_price`, `max_price`, `page` |
-| GET | `/api/listings/stats` | Nombre de logements et prix moyen, min et max par quartier |
-| GET | `/api/listings/:id` | Détail d'un logement |
-| POST | `/api/listings` | Ajouter un logement |
-| PUT | `/api/listings/:id` | Modifier un logement |
+| GET | `/api/listings/stats` | Nombre de logements, prix moyen, min et max par arrondissement |
+| GET | `/api/listings/:id` | Détail d'un logement par `_id` MongoDB |
+| POST | `/api/listings` | Créer un logement |
+| PUT | `/api/listings/:id` | Modifier partiellement un logement (`$set`) |
 | DELETE | `/api/listings/:id` | Supprimer un logement |
 
-Exemple :
+Codes de réponse : `200` succès, `201` création, `400` données invalides (validation Mongoose), `404` logement introuvable, `500` erreur serveur.
+
+Exemple de requête :
 
 ```
-GET /api/listings?neighbourhood=Brooklyn&room_type=Private room&max_price=100&page=1
+GET /api/listings?neighbourhood=Brooklyn&max_price=80&page=1
 ```
 
-## Résumé de l'étude ReplicaSet
+Exemple de création :
 
-- **Réplication** quasi instantanée en environnement local, grâce à l'Oplog (journal de réplication idempotent).
-- **Failover automatique** en 10 à 30 secondes sans intervention manuelle, puis réintégration transparente d'un nœud par rattrapage de l'Oplog.
-- **Limites** : toutes les écritures passent par un seul Primary, chaque nœud stocke l'intégralité des données, cohérence éventuelle sur les Secondaries.
-- **Perspective** : le Sharded Cluster (shards en ReplicaSet, config servers, mongos) pour la scalabilité horizontale.
+```json
+POST /api/listings
+{
+  "name": "Studio moderne",
+  "host_name": "Jean",
+  "neighbourhood_group": "Brooklyn",
+  "room_type": "Private room",
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "price": 75
+}
+```
 
-Le détail figure dans le rapport : `docs/Rapport_Limites_Perspectives_Conclusion.docx`.
+## Rapport
+
+Le rapport complet (choix du dataset, requêtes, déploiement Atlas, explication du code, documentation de l'API et captures des tests Postman) se trouve dans `docs/Rapport_Projet_NoSQL.docx`.
 
 ## Pistes d'amélioration
 
-- Ajouter une authentification pour les routes POST, PUT et DELETE.
+- Sécuriser les routes d'écriture avec une authentification JWT.
+- Ajouter des requêtes géospatiales à partir des coordonnées GPS.
 - Valider les entrées avec `express-validator` (déjà installé) et échapper le paramètre `neighbourhood`, utilisé dans une expression régulière.
-- Ajouter des tests automatisés.
+- Déployer l'API sur une plateforme cloud publique (Render, par exemple).
 
 ## Auteur
 
