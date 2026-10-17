@@ -92,7 +92,7 @@ POST /api/listings
 
 ## Rapport
 
-Le rapport complet (choix du dataset, requêtes, déploiement Atlas, explication du code, documentation de l'API et captures des tests Postman) se trouve dans `docs/Rapport_API_Airbnb_NYC_MongoDB_Atlas.docx`.
+Le rapport complet (choix du dataset, requêtes, déploiement Atlas, explication du code, documentation de l'API et captures des tests Postman) se trouve dans `docs/Rapport_API_Airbnb_NYC_MongoDB_Atlas.pdf`.
 
 ## Pistes d'amélioration
 
