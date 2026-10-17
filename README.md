@@ -16,6 +16,10 @@ Projet du module Bases de Données NoSQL, INGC2 InDIA 2025 à 2026, ESMT Dakar.
 
 Node.js, Express 5, Mongoose 9, MongoDB Atlas (cluster gratuit M0 sur AWS), MongoDB Compass, dotenv, cors, Postman.
 
+## Architecture
+
+![Architecture de l'API Airbnb NYC](docs/architecture.png)
+
 ## Structure
 
 ```
@@ -28,7 +32,8 @@ airbnb-api/
 │   ├── queries.js          10 requêtes MongoDB documentées
 │   └── AB_NYC_2019.csv     Jeu de données (48 895 lignes)
 └── docs/
-    └── Rapport_Projet_NoSQL.docx   Rapport complet du projet
+    ├── architecture.png                            Schéma d'architecture
+    └── Rapport_API_Airbnb_NYC_MongoDB_Atlas.docx   Rapport complet du projet
 ```
 
 ## Installation
@@ -87,7 +92,7 @@ POST /api/listings
 
 ## Rapport
 
-Le rapport complet (choix du dataset, requêtes, déploiement Atlas, explication du code, documentation de l'API et captures des tests Postman) se trouve dans `docs/Rapport_Projet_NoSQL.docx`.
+Le rapport complet (choix du dataset, requêtes, déploiement Atlas, explication du code, documentation de l'API et captures des tests Postman) se trouve dans `docs/Rapport_API_Airbnb_NYC_MongoDB_Atlas.docx`.
 
 ## Pistes d'amélioration
 
